@@ -1,6 +1,6 @@
 pub mod camera;
 
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use bevy_inspector_egui::{
     Inspectable, RegisterInspectable, WorldInspectorPlugin,
 };

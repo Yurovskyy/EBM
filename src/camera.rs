@@ -1,6 +1,6 @@
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::{Inspectable, InspectorPlugin};
-use bevy_mod_picking::{PickingCameraBundle};
+use bevy_mod_picking::PickingCameraBundle;
 
 pub struct CameraPlugin;
 
