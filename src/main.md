@@ -35,7 +35,7 @@
 
         move_camera --> CameraSpeed
 
-        %%Startup
+        %%StartupSystems
         class spawn_camera {
             <<StartupSystem>>
             ~Commands
