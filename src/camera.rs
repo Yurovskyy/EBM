@@ -9,7 +9,7 @@ impl Plugin for CameraPlugin {
         app.init_resource::<CameraSpeed>()
             .add_plugin(InspectorPlugin::<CameraSpeed>::new())
             .add_startup_system(spawn_cameras)
-            .add_system(switch_camera)
+            // .add_system(switch_camera)
             .add_system(move_camera);
     }
 }
@@ -31,37 +31,37 @@ fn spawn_cameras(mut commands: Commands) {
         })
         .insert(Name::new("Main camera"))
         .insert(PickingCameraBundle::default());
-    commands
-        .spawn(Camera3dBundle {
-            camera: Camera {
-                is_active: false,
-                ..default()
-            },
-            projection: OrthographicProjection {
-                scaling_mode: ScalingMode::FixedVertical(2.0),
-                scale: 3.,
-                ..default()
-            }
-            .into(),
-            transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-            ..default()
-        })
-        .insert(Name::new("Ortho Camera"))
-        .insert(PickingCameraBundle::default());
+    // commands
+    //     .spawn(Camera3dBundle {
+    //         camera: Camera {
+    //             is_active: false,
+    //             ..default()
+    //         },
+    //         projection: OrthographicProjection {
+    //             scaling_mode: ScalingMode::FixedVertical(2.0),
+    //             scale: 3.,
+    //             ..default()
+    //         }
+    //         .into(),
+    //         transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+    //         ..default()
+    //     })
+    //     .insert(Name::new("Ortho Camera"))
+    //     .insert(PickingCameraBundle::default());
 }
 
 // Esse sistema só funciona para 2 cameras!
-fn switch_camera(keyboard_input: Res<Input<KeyCode>>, mut camera: Query<&mut Camera>) {
-    if keyboard_input.just_pressed(KeyCode::V) {
-        for mut i in &mut camera {
-            if i.is_active {
-                i.is_active = false;
-            } else {
-                i.is_active = true;
-            }
-        }
-    }
-}
+// fn switch_camera(keyboard_input: Res<Input<KeyCode>>, mut camera: Query<&mut Camera>) {
+//     if keyboard_input.just_pressed(KeyCode::V) {
+//         for mut i in &mut camera {
+//             if i.is_active {
+//                 i.is_active = false;
+//             } else {
+//                 i.is_active = true;
+//             }
+//         }
+//     }
+// }
 
 fn move_camera(
     keyboard_input: Res<Input<KeyCode>>,
