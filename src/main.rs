@@ -1,11 +1,7 @@
-pub mod camera;
-
 use bevy::prelude::*;
-use bevy_inspector_egui::{
-    Inspectable, RegisterInspectable, WorldInspectorPlugin,
-};
-use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle };
-use camera::CameraPlugin;
+use bevy_inspector_egui::{Inspectable, RegisterInspectable, WorldInspectorPlugin};
+use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle};
+use ebm::camera::CameraPlugin;
 use rand::Rng;
 
 fn main() {
@@ -22,7 +18,6 @@ fn main() {
         .run();
 }
 
-
 fn spawn_light(mut commands: Commands) {
     commands
         .spawn(PointLightBundle {
@@ -31,7 +26,6 @@ fn spawn_light(mut commands: Commands) {
         })
         .insert(Name::new("Main light"));
 }
-
 
 #[derive(Component, Inspectable)]
 enum TypeOfCell {
