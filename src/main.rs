@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::{Inspectable, RegisterInspectable, WorldInspectorPlugin, InspectorPlugin};
 use bevy_mod_picking::{DefaultPickingPlugins, PickableBundle, PickableMesh, Selection};
 use ebm::camera::CameraPlugin;
-use rand::Rng;
+use ebm::grid::{GridPlugin,GridXYZ,TypeOfCell};
 
 fn main() {
     App::new()
@@ -16,18 +16,15 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugins(DefaultPickingPlugins)
         .add_plugin(CameraPlugin)
+        .add_plugin(GridPlugin)
         .add_event::<JustClickedCellEvent>()
-        .init_resource::<Grid>()
         .init_resource::<SelectedPlayer>()
         .add_plugin(InspectorPlugin::<SelectedPlayer>::new())
-        .add_startup_system(create_grid)
         .add_startup_system(spawn_light)
         .add_startup_system(spawn_player)
-        .add_system(update_cell_material)
         .add_system(select_player)
         .add_system(just_selected_cell_event_system)
         .add_system(move_player)
-        .register_inspectable::<TypeOfCell>()
         .run();
 }
 
@@ -40,102 +37,6 @@ fn spawn_light(mut commands: Commands) {
         .insert(Name::new("Main light"));
 }
 
-#[derive(Component, Inspectable)]
-enum TypeOfCell {
-    Void,  // nao andavel e não renderizada
-    Impa,  //nao andavel e renderizada
-    Pass,  //andavel e renderizada
-    Coord, //nao andavel e renderizada
-}
-
-#[derive(Default)]
-struct StandardCell {
-    typo: u8,
-    material: Handle<StandardMaterial>,
-}
-
-#[derive(Resource, Default)]
-struct Grid {
-    grid: Vec<Vec<StandardCell>>,
-}
-const GRID_X: u8 = 10;
-const GRID_Z: u8 = 10;
-
-fn create_grid(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut grid: ResMut<Grid>,
-) {
-    let mesh = meshes.add(Mesh::from(shape::Plane { size: 1. }));
-    let material = [
-        materials.add(Color::hex("1B3E3C").unwrap().into()),
-        materials.add(Color::hex("FFC190").unwrap().into()),
-        materials.add(Color::hex("902200").unwrap().into()),
-    ];
-
-    let father_grid = commands
-        .spawn(PbrBundle {
-            mesh: mesh.clone(),
-            material: materials.add(Color::rgba(0., 0., 0., 0.).into()),
-            transform: Transform::from_xyz(0., 0., 0.),
-            ..default()
-        })
-        .insert(Name::new("Grid"))
-        .id();
-
-    grid.grid = (0..GRID_X)
-        .map(|i| {
-            (0..GRID_Z)
-                .map(|j| {
-                    let material_index = rand::thread_rng().gen_range(0..3);
-                    let cell = commands
-                        .spawn(PbrBundle {
-                            mesh: mesh.clone(),
-                            material: { material[material_index].clone() },
-                            transform: Transform::from_xyz(i as f32, 0., j as f32),
-                            ..default()
-                        })
-                        .insert(TypeOfCell::Pass)
-                        .insert(Name::new(format!("Cell {},{}", i, j)))
-                        .insert(PickableBundle::default())
-                        .id();
-                    commands.entity(father_grid).add_child(cell);
-                    StandardCell {
-                        typo: 3,
-                        material: material[material_index].clone(),
-                    }
-                })
-                .collect()
-        })
-        .collect();
-}
-
-fn update_cell_material(
-    mut cell: Query<(&mut Handle<StandardMaterial>, &Transform, &TypeOfCell), Changed<TypeOfCell>>,
-    grid: Res<Grid>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for (mut material, transform, typeofcell) in &mut cell {
-        match typeofcell {
-            TypeOfCell::Void => {
-                *material = materials.add(Color::rgba(0., 0., 0., 0.).into());
-            }
-            TypeOfCell::Impa => {
-                *material = materials.add(Color::hex("4E0D00").unwrap().into());
-            }
-            TypeOfCell::Pass => {
-                *material = grid.grid[transform.translation.x as usize]
-                    [transform.translation.z as usize]
-                    .material
-                    .clone();
-            }
-            TypeOfCell::Coord => {
-                *material = materials.add(Color::hex("FFFFFF").unwrap().into());
-            }
-        }
-    }
-}
 
 #[derive(Component, Inspectable)]
 struct Player {
@@ -160,12 +61,13 @@ fn spawn_player(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    grid: Res<GridXYZ>,
 ) {
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
             material: materials.add(Color::hex("A9A96B").unwrap().into()),
-            transform: Transform::from_xyz((GRID_X / 2) as f32, PLAYER_Y, (GRID_Z / 2) as f32),
+            transform: Transform::from_xyz((grid.x / 2) as f32, PLAYER_Y, (grid.z / 2) as f32),
             ..default()
         })
         .insert(Name::new("Player"))
@@ -175,7 +77,7 @@ fn spawn_player(
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Cube { size: 0.5 })),
             material: materials.add(Color::hex("FFB54A").unwrap().into()),
-            transform: Transform::from_xyz((GRID_X / 3) as f32, PLAYER_Y, (GRID_Z / 3) as f32),
+            transform: Transform::from_xyz((grid.x / 3) as f32, PLAYER_Y, (grid.z / 3) as f32),
             ..default()
         })
         .insert(Name::new("Player2"))
